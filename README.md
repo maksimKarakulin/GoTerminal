@@ -2,9 +2,9 @@ Here's a `README.md` describing the features of your Go terminal application:
 
 ---
 
-# goTerminal
+# GoTerminal
 
-`goTerminal` is a pretty simple interactive command-line interface built in Go. It supports basic commands, math operations, and command history features. It uses the `readline` library for input handling and `color` for colorful terminal output.
+`GoTerminal` is a pretty simple interactive command-line interface built in Go. It supports basic commands, math operations, and command history features. It uses the `readline` library for input handling and `color` for colorful terminal output.
 
 ## 🚀 Features
 
