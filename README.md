@@ -1,70 +1,95 @@
-# GoTerminal
+# 🧮 GoTerminal
 
-`GoTerminal` is a pretty simple interactive command-line interface built in Go. It supports basic commands, math operations, and command history features. It uses the `readline` library for input handling and `color` for colorful terminal output.
+**GoTerminal** is a simple yet powerful interactive command-line interface (CLI) built with Go. It features a variety of general and arithmetic commands, colorful output for readability, command history, file I/O, configuration management, and support for piping.
+
+---
 
 ## 🚀 Features
 
 ### ✅ General Commands
 
-* **`help`**
-  Display all available commands with their descriptions.
+| Command          | Description                      |
+| ---------------- | -------------------------------- |
+| `help`           | Display all available commands   |
+| `exit`           | Exit the terminal gracefully     |
+| `history`        | Show history of entered commands |
+| `clear`          | Clear command history            |
+| `echo <message>` | Echo back the provided message   |
 
-* **`exit`**
-  Exit the terminal gracefully.
+### ➕ Arithmetic Operations
 
-* **`history`**
-  Show a history of all entered commands during the session.
+| Command                  | Description                           |
+| ------------------------ | ------------------------------------- |
+| `arithmetic`             | List all arithmetic commands          |
+| `add <num1> <num2>`      | Add two numbers                       |
+| `subtract <num1> <num2>` | Subtract second number from the first |
+| `multiply <num1> <num2>` | Multiply two numbers                  |
+| `division <num1> <num2>` | Divide first number by the second     |
+| `modulus <num1> <num2>`  | Return modulus of the two numbers     |
 
-* **`clear`**
-  Clear the command history.
+### 📂 File I/O
 
-* **`echo <message>`**
-  Repeats (echoes) the message back to the user.
+| Command                       | Description                        |
+| ----------------------------- | ---------------------------------- |
+| `cat <filename>`              | Display contents of a file         |
+| `write <filename> <content>`  | Write content to a file            |
+| `append <filename> <content>` | Append content to an existing file |
 
-### ➕ Math Operations
+### 🧩 Pipe Support
 
-* **`add <num1> <num2>`**
-  Adds two numbers and displays the result.
-
-* **`subtract <num1> <num2>`**
-  Subtracts the second number from the first and displays the result.
-
-* **`multiply <num1> <num2>`**
-  Multiplies two numbers and displays the result.
+* Chain multiple commands using:
+  `pipe <cmd1> | <cmd2> | ...`
+  Passes output of one command as input to the next.
 
 ### 🎨 Colorful Output
 
-All responses and messages are color-coded using the [`fatih/color`](https://github.com/fatih/color) library for better readability and a more engaging CLI experience.
+* Terminal output is color-coded using [`fatih/color`](https://github.com/fatih/color) for:
 
-### ⌨️ Readline Support
+  * Prompts
+  * Errors
+  * Standard output
 
-Powered by [`chzyer/readline`](https://github.com/chzyer/readline), the terminal supports:
+### ⌨️ Readline Integration
+
+Powered by [`chzyer/readline`](https://github.com/chzyer/readline):
 
 * Line editing
-* Command history navigation using arrow keys
-* Auto line completion (will be added in next commit)
+* Arrow key history navigation
+* Command autocompletion *(coming soon)*
 
-## 🛠 Installation & Usage
+### ⚙️ Configuration & Themes
 
-1. Make sure you have Go installed.
-2. Install required packages:
-
-   ```bash
-   go get github.com/chzyer/readline
-   go get github.com/fatih/color
-   ```
-3. Run the application:
-
-   ```bash
-   go run main.go
-   ```
-
-## 🧩 Future Improvements
-
-* AI Prompts
-* Frontend with database implementation
-* Hosting online
-* .gitignore the .env files because obviously you need to do that. 
+* `config`: View current config
+* `set <property> <value>`: Update config
+* `theme <theme-name>`: Change terminal theme
+  Available themes: `default`, `dark`, `light`, `solarized`
 
 ---
 
+## 🛠 Installation & Usage
+
+### Prerequisites
+
+* Go installed (version ≥ 1.16)
+
+### Install Dependencies
+
+```bash
+go get github.com/chzyer/readline
+go get github.com/fatih/color
+```
+
+### Run the Application
+
+```bash
+go run main.go
+```
+
+---
+
+## 🧠 Future Improvements
+
+* 🔮 AI Command Suggestions / Prompts
+* 🌐 Frontend with database integration
+* ☁️ Host online for remote terminal access
+* 📂 `.gitignore` `.env` and other sensitive files (for security)
