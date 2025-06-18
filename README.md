@@ -65,11 +65,10 @@ Powered by [`chzyer/readline`](https://github.com/chzyer/readline), the terminal
 
 ## 🧩 Future Improvements
 
-* Add division and modulus operations
-* Implement auto-completion for commands
-* Add support for piping and file I/O
-* Add configuration settings (e.g., prompt style, color themes)
-* AI (Using a 405B Model because why not)
+* AI Prompts
+* Frontend with database implementation
+* Hosting online
+* .gitignore the .env files because obviously you need to do that. 
 
 ---
 
