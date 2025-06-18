@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
+	"io"
 	"os"
 	"strings"
 )
@@ -17,7 +19,26 @@ type command struct {
 var commands = make(map[string]command)
 var history []string
 
+type Config struct {
+	Prompt      string
+	PromptColor string
+	OutputColor string
+	ErrorColor  string
+	HistoryFile string
+	Theme       string
+}
+
+var config = Config{
+	Prompt:      "> ",
+	PromptColor: "cyan",
+	OutputColor: "blue",
+	ErrorColor:  "red",
+	HistoryFile: ".gosh_history",
+	Theme:       "default",
+}
+
 func main() {
+
 	// Register commands
 	registerCommand("help", "Show help", cmdHelp)
 	registerCommand("exit", "Exit the program", cmdExit)
@@ -30,7 +51,13 @@ func main() {
 	registerCommand("subtract", "Subtract two numbers", cmdSubtract)
 	registerCommand("division", "Divide two numbers", cmdDivision)
 	registerCommand("modulus", "Calculate modulus of two numbers", cmdModulus)
-
+	registerCommand("pipe", "Pipe output between commands", cmdPipe)
+	registerCommand("cat", "Display file contents", cmdCat)
+	registerCommand("write", "Write to a file", cmdWrite)
+	registerCommand("append", "Append to a file", cmdAppend)
+	registerCommand("config", "Configure terminal settings", cmdConfig)
+	registerCommand("set", "Set a configuration value", cmdSet)
+	registerCommand("theme", "Change color theme", cmdTheme)
 	// Set up readline with command completion
 	completer := readline.NewPrefixCompleter(
 		readline.PcItem("help"),
@@ -79,6 +106,7 @@ func main() {
 			color.Red("Unknown command: %s", cmdName)
 		}
 	}
+
 }
 
 func registerCommand(name, description string, handler func(args []string)) {
@@ -218,4 +246,201 @@ func cmdModulus(args []string) {
 	}
 	result := int(num1) % int(num2)
 	color.Blue("Result: %d", result)
+}
+
+// Pipe command handler
+func cmdPipe(args []string) {
+	if len(args) < 2 {
+		color.Red("Usage: pipe <command1> | <command2> [| <command3> ...]")
+		return
+	}
+
+	// Split commands by pipe character
+	var cmdChain [][]string
+	currentCmd := []string{}
+	for _, arg := range args {
+		if arg == "|" {
+			if len(currentCmd) > 0 {
+				cmdChain = append(cmdChain, currentCmd)
+				currentCmd = []string{}
+			}
+		} else {
+			currentCmd = append(currentCmd, arg)
+		}
+	}
+	if len(currentCmd) > 0 {
+		cmdChain = append(cmdChain, currentCmd)
+	}
+
+	// Execute commands in chain with piping
+	var lastOutput string
+	for i, cmdParts := range cmdChain {
+		if len(cmdParts) == 0 {
+			continue
+		}
+
+		cmdName := cmdParts[0]
+		cmdArgs := cmdParts[1:]
+
+		if i > 0 {
+			// Prepend last output to arguments
+			cmdArgs = append([]string{lastOutput}, cmdArgs...)
+		}
+
+		if cmd, exists := commands[cmdName]; exists {
+			// Create a custom handler to capture output
+			output := ""
+			originalHandler := cmd.handler
+			cmd.handler = func(args []string) {
+				buf := new(bytes.Buffer)
+				old := os.Stdout
+				r, w, _ := os.Pipe()
+				os.Stdout = w
+
+				originalHandler(args)
+
+				w.Close()
+				os.Stdout = old
+				io.Copy(buf, r)
+				output = buf.String()
+			}
+
+			cmd.handler(cmdArgs)
+			lastOutput = output
+			cmd.handler = originalHandler // Restore original handler
+		} else {
+			color.Red("Unknown command in pipe: %s", cmdName)
+			return
+		}
+	}
+
+	color.Blue(lastOutput)
+}
+
+// File I/O commands
+func cmdCat(args []string) {
+	if len(args) != 1 {
+		color.Red("Usage: cat <filename>")
+		return
+	}
+
+	content, err := os.ReadFile(args[0])
+	if err != nil {
+		color.Red("Error reading file: %v", err)
+		return
+	}
+
+	color.Blue(string(content))
+}
+
+func cmdWrite(args []string) {
+	if len(args) < 2 {
+		color.Red("Usage: write <filename> <content>")
+		return
+	}
+
+	content := strings.Join(args[1:], " ")
+	err := os.WriteFile(args[0], []byte(content), 0644)
+	if err != nil {
+		color.Red("Error writing file: %v", err)
+		return
+	}
+
+	color.Green("File written successfully")
+}
+
+func cmdAppend(args []string) {
+	if len(args) < 2 {
+		color.Red("Usage: append <filename> <content>")
+		return
+	}
+
+	f, err := os.OpenFile(args[0], os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		color.Red("Error opening file: %v", err)
+		return
+	}
+	defer f.Close()
+
+	content := strings.Join(args[1:], " ")
+	if _, err = f.WriteString(content + "\n"); err != nil {
+		color.Red("Error appending to file: %v", err)
+		return
+	}
+
+	color.Green("Content appended successfully")
+}
+
+// Configuration commands
+func cmdConfig(args []string) {
+	color.Green("Current Configuration:")
+	fmt.Printf("Prompt: %s\n", config.Prompt)
+	fmt.Printf("Prompt Color: %s\n", config.PromptColor)
+	fmt.Printf("Output Color: %s\n", config.OutputColor)
+	fmt.Printf("Error Color: %s\n", config.ErrorColor)
+	fmt.Printf("History File: %s\n", config.HistoryFile)
+	fmt.Printf("Theme: %s\n", config.Theme)
+}
+
+// Set configuration property
+func cmdSet(args []string) {
+	if len(args) != 2 {
+		color.Red("Usage: set <property> <value>")
+		return
+	}
+
+	property := args[0]
+	value := args[1]
+
+	switch property {
+	case "prompt":
+		config.Prompt = value
+	case "prompt_color":
+		config.PromptColor = value
+	case "output_color":
+		config.OutputColor = value
+	case "error_color":
+		config.ErrorColor = value
+	case "history_file":
+		config.HistoryFile = value
+	default:
+		color.Red("Unknown configuration property: %s", property)
+		return
+	}
+
+	color.Green("Configuration updated")
+}
+
+// Theme command handler
+func cmdTheme(args []string) {
+	if len(args) != 1 {
+		color.Red("Available themes: default, dark, light, solarized")
+		return
+	}
+
+	theme := args[0]
+	switch theme {
+	case "default":
+		config.PromptColor = "cyan"
+		config.OutputColor = "blue"
+		config.ErrorColor = "red"
+	case "dark":
+		config.PromptColor = "magenta"
+		config.OutputColor = "green"
+		config.ErrorColor = "yellow"
+	case "light":
+		config.PromptColor = "blue"
+		config.OutputColor = "black"
+		config.ErrorColor = "red"
+	case "solarized":
+		config.PromptColor = "yellow"
+		config.OutputColor = "cyan"
+		config.ErrorColor = "red"
+	default:
+		color.Red("Unknown theme: %s", theme)
+		return
+	}
+
+	config.Theme = theme
+	color.Green("Theme set to %s", theme)
 }
